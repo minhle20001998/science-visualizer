@@ -42,6 +42,7 @@ export function MoleculeAtom({
           metalness={0.1}
           emissive={atom.color}
           emissiveIntensity={colorIsDark ? 0.2 : 0.0}
+
         />
       </mesh>
       {!spaceFill && (

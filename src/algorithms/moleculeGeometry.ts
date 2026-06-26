@@ -7,6 +7,7 @@ export type GeometryType =
   | 'tetrahedral'
   | 'trigonal-bipyramidal'
   | 'octahedral'
+  | 'chain'
 
 export interface MolAtom {
   element: string
@@ -157,6 +158,7 @@ function generatePositions(
       }
       return positions
     }
+    default: return []
   }
 }
 
@@ -400,6 +402,203 @@ function generatePositionsFromGraph(
   return positions.map(p => p || new THREE.Vector3(0, 0, 0))
 }
 
+function findLongestPath(adj: number[][], isCore: (i: number) => boolean = () => true): number[] {
+  const n = adj.length
+  if (n === 0) return []
+  function bfs(start: number): { dist: number[]; parent: number[] } {
+    const dist = new Array(n).fill(-1)
+    const parent = new Array(n).fill(-1)
+    const q: number[] = [start]
+    dist[start] = 0
+    for (let idx = 0; idx < q.length; idx++) {
+      const cur = q[idx]
+      for (const nb of adj[cur]) {
+        if (dist[nb] === -1 && isCore(nb)) {
+          dist[nb] = dist[cur] + 1
+          parent[nb] = cur
+          q.push(nb)
+        }
+      }
+    }
+    return { dist, parent }
+  }
+  const s = adj.findIndex((_, i) => isCore(i))
+  if (s === -1) return []
+  const f1 = bfs(s)
+  let end1 = 0
+  for (let i = 0; i < n; i++) if (isCore(i) && f1.dist[i] > f1.dist[end1]) end1 = i
+  if (f1.dist[end1] === -1) return []
+  const f2 = bfs(end1)
+  let end2 = 0
+  for (let i = 0; i < n; i++) if (isCore(i) && f2.dist[i] > f2.dist[end2]) end2 = i
+  if (f2.dist[end2] === -1) return []
+  const path: number[] = []
+  let cur = end2
+  while (cur !== -1) { path.unshift(cur); cur = f2.parent[cur] }
+  return path
+}
+
+function generateChainPositions(
+  elements: { element: string }[],
+  bonds: { from: number; to: number }[],
+  bondLength: number
+): THREE.Vector3[] {
+  const n = elements.length
+  const positions: (THREE.Vector3 | null)[] = new Array(n).fill(null)
+  const adj: number[][] = Array.from({ length: n }, () => [])
+  for (const b of bonds) {
+    adj[b.from].push(b.to)
+    adj[b.to].push(b.from)
+  }
+
+  const isCore = adj.map((a, i) => elements[i].element === 'C' || a.length >= 3)
+  const backbone = findLongestPath(adj, (i) => isCore[i])
+
+  const zigzagAngle = 35.26 * Math.PI / 180
+  const c = Math.cos(zigzagAngle)
+  const s = Math.sin(zigzagAngle)
+
+  for (let i = 0; i < backbone.length; i++) {
+    const idx = backbone[i]
+    if (i === 0) {
+      positions[idx] = new THREE.Vector3(0, 0, 0)
+    } else {
+      const prev = positions[backbone[i - 1]]!
+      const parity = (i % 2 === 0) ? -1 : 1
+      const dx = bondLength * c
+      const dy = bondLength * s * parity
+      positions[idx] = new THREE.Vector3(prev.x + dx, prev.y + dy, 0)
+    }
+  }
+
+  const queue = [...backbone]
+  const visited = new Set(backbone)
+
+  while (queue.length > 0) {
+    const cur = queue.shift()!
+    const curPos = positions[cur]
+    if (!curPos) continue
+
+    const unplaced = adj[cur].filter(i => !visited.has(i))
+    if (unplaced.length === 0) continue
+
+    const isBackbone = backbone.includes(cur)
+    const bbIdx = isBackbone ? backbone.indexOf(cur) : -1
+
+    const bbNeighbors = isBackbone
+      ? [backbone[bbIdx - 1], backbone[bbIdx + 1]].filter(i => i !== undefined) as number[]
+      : []
+
+    const chemDeg = adj[cur].length
+
+    if (isBackbone && bbNeighbors.length === 2 && chemDeg === 4) {
+      const prevIdx = bbNeighbors[0]
+      const nextIdx = bbNeighbors[1]
+      const posPrev = positions[prevIdx]!
+      const posNext = positions[nextIdx]!
+
+      const dPrev = new THREE.Vector3().subVectors(curPos, posPrev).normalize()
+      const dNext = new THREE.Vector3().subVectors(posNext, curPos).normalize()
+      const bisector = new THREE.Vector3().addVectors(dPrev, dNext).normalize()
+      const normal = new THREE.Vector3(0, 0, 1)
+
+      const a = 1 / (3 * bisector.dot(dPrev))
+      const cComp = Math.sqrt(1 - a * a)
+
+      const h1Dir = new THREE.Vector3()
+        .addScaledVector(bisector, -a)
+        .addScaledVector(normal, cComp)
+        .normalize()
+      const h2Dir = new THREE.Vector3()
+        .addScaledVector(bisector, -a)
+        .addScaledVector(normal, -cComp)
+        .normalize()
+
+      positions[unplaced[0]] = curPos.clone().add(h1Dir.multiplyScalar(bondLength))
+      visited.add(unplaced[0])
+      queue.push(unplaced[0])
+      if (unplaced.length > 1) {
+        positions[unplaced[1]] = curPos.clone().add(h2Dir.multiplyScalar(bondLength))
+        visited.add(unplaced[1])
+        queue.push(unplaced[1])
+      }
+    } else if (isBackbone && bbNeighbors.length === 1 && chemDeg === 4) {
+      const prevIdx = bbNeighbors[0]
+      const posPrev = positions[prevIdx]!
+      const dPrev = new THREE.Vector3().subVectors(curPos, posPrev).normalize()
+
+      const d = -(1 / 3)
+      const r = Math.sqrt(8) / 3
+      const ref = Math.abs(dPrev.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0)
+      const perp1 = new THREE.Vector3().crossVectors(dPrev, ref).normalize()
+      const perp2 = new THREE.Vector3().crossVectors(dPrev, perp1).normalize()
+
+      const hDirs = [
+        new THREE.Vector3().addScaledVector(dPrev, d).addScaledVector(perp1, r).normalize(),
+        new THREE.Vector3().addScaledVector(dPrev, d).addScaledVector(perp2, r).normalize(),
+        new THREE.Vector3().addScaledVector(dPrev, d).addScaledVector(perp1.clone().multiplyScalar(-1), r).normalize(),
+      ]
+
+      for (let j = 0; j < unplaced.length && j < 3; j++) {
+        positions[unplaced[j]] = curPos.clone().add(hDirs[j].clone().multiplyScalar(bondLength))
+        visited.add(unplaced[j])
+        queue.push(unplaced[j])
+      }
+    } else {
+      if (isBackbone && bbNeighbors.length >= 1) {
+        const prevIdx = bbNeighbors[0]
+        const posPrev = positions[prevIdx]!
+        const dPrev = new THREE.Vector3().subVectors(curPos, posPrev).normalize()
+        for (let j = 0; j < unplaced.length; j++) {
+          const angle = (j / unplaced.length) * Math.PI * 2
+          const adjAngle = unplaced.length === 2
+            ? (j === 0 ? -Math.PI / 6 : Math.PI + Math.PI / 6)
+            : angle
+          const perp = new THREE.Vector3(-Math.sin(adjAngle), Math.cos(adjAngle), 0)
+          const dir = new THREE.Vector3().addVectors(
+            dPrev.clone().multiplyScalar(-0.3),
+            perp.multiplyScalar(0.95)
+          ).normalize()
+          positions[unplaced[j]] = curPos.clone().add(dir.multiplyScalar(bondLength))
+          visited.add(unplaced[j])
+          queue.push(unplaced[j])
+        }
+      } else {
+        for (let j = 0; j < unplaced.length; j++) {
+          const parentDir = adj[cur].find(n => visited.has(n) && positions[n])
+          let dir: THREE.Vector3
+          if (parentDir !== undefined) {
+            dir = new THREE.Vector3().subVectors(curPos, positions[parentDir]!).normalize()
+          } else {
+            const angle = (j / unplaced.length) * Math.PI * 2
+            dir = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0)
+          }
+          positions[unplaced[j]] = curPos.clone().add(dir.multiplyScalar(bondLength))
+          visited.add(unplaced[j])
+          queue.push(unplaced[j])
+        }
+      }
+    }
+  }
+
+  const result = positions.map(p => p || new THREE.Vector3(0, 0, 0))
+  if (elements.length > 50) {
+    const names = elements.map((e, i) => `${e.element}${i}`)
+    const last = Math.min(elements.length, 56)
+    const out: string[] = []
+    const keyIndices = [0, 16, 17, 18, 19, 20, 55]
+    for (const i of [...keyIndices, ...Array.from({ length: 8 }, (_, k) => last - 1 - k)]) {
+      if (i >= 0 && i < last) {
+        out.push(`  ${names[i]} (idx ${i}): ${result[i].x.toFixed(3)}, ${result[i].y.toFixed(3)}, ${result[i].z.toFixed(3)}`)
+      }
+    }
+    console.log('=== CHAIN POSITIONS (key+tail) ===')
+    console.log(out.join('\n'))
+    console.log('=== END ===')
+  }
+  return result
+}
+
 export function buildMolecule3D(
   geometry: GeometryType,
   elements: { element: string; label: string; parentIndex?: number }[],
@@ -408,7 +607,9 @@ export function buildMolecule3D(
 ): Molecule3D {
   const bl = bondLength ?? BOND_LENGTH
 
-  const positions = isMultiCenter(bonds)
+  const positions = geometry === 'chain'
+    ? generateChainPositions(elements, bonds, bl)
+    : isMultiCenter(bonds)
     ? generatePositionsFromGraph(elements, bonds, bl)
     : generatePositions(geometry, elements.length, bl)
 
@@ -420,12 +621,14 @@ export function buildMolecule3D(
   }))
 
   let centeringAtoms = atoms
-  for (let i = 0; i < atoms.length; i++) {
-    const parent = elements[i].parentIndex
-    if (parent !== undefined && atoms[parent]) {
-      const dir = new THREE.Vector3().subVectors(atoms[parent].position, atoms[0].position).normalize()
-      atoms[i].position.copy(atoms[parent].position).add(dir.multiplyScalar(bl * 0.7))
-      centeringAtoms = atoms.filter((_, idx) => elements[idx].parentIndex === undefined)
+  if (geometry !== 'chain') {
+    for (let i = 0; i < atoms.length; i++) {
+      const parent = elements[i].parentIndex
+      if (parent !== undefined && atoms[parent]) {
+        const dir = new THREE.Vector3().subVectors(atoms[parent].position, atoms[0].position).normalize()
+        atoms[i].position.copy(atoms[parent].position).add(dir.multiplyScalar(bl * 0.7))
+        centeringAtoms = atoms.filter((_, idx) => elements[idx].parentIndex === undefined)
+      }
     }
   }
 
