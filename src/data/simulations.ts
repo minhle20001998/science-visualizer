@@ -28,4 +28,18 @@ export const SIMULATIONS: Simulation[] = [
     tags: ['chemistry'],
     icon: '🔧',
   },
+  {
+    id: 'biology',
+    title: 'Life Simulation',
+    description: 'Interactive 3D simulations of biological systems and the molecular origins of life.',
+    tags: ['biology'],
+    icon: '🌱',
+  },
+  {
+    id: 'electronics',
+    title: 'Electronics',
+    description: 'Interactive 3D visualizations showing how electricity flows through human-made components — transistors, circuits, and beyond.',
+    tags: ['physics', 'electronics'],
+    icon: '🔌',
+  },
 ]

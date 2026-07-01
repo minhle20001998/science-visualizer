@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SIMULATIONS } from '../data/simulations'
 
-const ALL_TAGS = ['all', 'physics', 'chemistry', 'biology'] as const
+const ALL_TAGS = ['all', 'physics', 'chemistry', 'biology', 'electronics'] as const
 const TAG_COLORS: Record<string, string> = {
   physics: '#4af0ff',
   chemistry: '#a66cff',
   biology: '#66dd88',
+  electronics: '#ff9900',
 }
 
 export function HomePage() {
