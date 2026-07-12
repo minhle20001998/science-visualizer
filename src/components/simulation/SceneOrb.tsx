@@ -20,6 +20,10 @@ const ORB_COLORS: Record<string, string> = {
   Ribose: '#ff9f6b',
   Phospholipid: '#ff8a9e',
   'Fatty-tail': '#d4a574',
+  Alveolus: '#e8c8a0',
+  O2: '#00d4ff',
+  Capillary: '#c8a8f0',
+  RBC: '#c04040',
 }
 
 const DARK_THRESHOLD = 0.3

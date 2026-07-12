@@ -125,4 +125,34 @@ export const MOLECULE_DETAILS: Record<string, MoleculeDetail> = {
     formula: '\u2014',
     description: 'A primitive cell-like compartment formed when a lipid bilayer spontaneously encloses a volume of water containing replicating RNA. Protocells represent a crucial step in the origin of life — they concentrate reactants, protect genetic material, and enable natural selection at the cellular level.',
   },
+  'O2': {
+    name: 'Oxygen',
+    formula: 'O\u2082',
+    description: 'A diatomic molecule essential for cellular respiration. Makes up about 21% of Earth\'s atmosphere and diffuses from the alveolar air into the bloodstream where it binds to hemoglobin.',
+  },
+  'Alveolus': {
+    name: 'Alveolus',
+    formula: '\u2014',
+    description: 'Tiny air sacs in the lungs where gas exchange occurs. Each lung contains about 300 million alveoli, providing a surface area of roughly 70 m\u00B2 for efficient oxygen and carbon dioxide exchange.',
+  },
+  'RedBloodCell': {
+    name: 'Red Blood Cell',
+    formula: '\u2014',
+    description: 'Biconcave disk-shaped cells that carry oxygen throughout the body. Each red blood cell contains about 270 million hemoglobin molecules, enabling it to transport up to one billion oxygen molecules.',
+  },
+  'Hemoglobin': {
+    name: 'Hemoglobin',
+    formula: 'C\u2082\u2099\u2085\u2082H\u2084\u2086\u2086\u2084N\u2088\u2081\u2082O\u2088\u2083\u2082S\u2088Fe\u2084',
+    description: 'The iron-containing protein in red blood cells that binds oxygen. Each hemoglobin molecule has four heme groups containing iron, allowing it to carry up to four O\u2082 molecules. Binding is cooperative — the first O\u2082 makes it easier for the next to bind.',
+  },
+  'Capillary': {
+    name: 'Capillary',
+    formula: '\u2014',
+    description: 'The smallest blood vessels in the body, only one cell thick. Capillaries form a vast network that brings blood close to every cell, enabling the exchange of oxygen, carbon dioxide, nutrients, and waste.',
+  },
+  'RespiratoryMembrane': {
+    name: 'Respiratory Membrane',
+    formula: '\u2014',
+    description: 'The ultrathin barrier between alveolar air and capillary blood, measuring only about 0.5 \u00B5m across. It consists of alveolar epithelium, fused basement membranes, and capillary endothelium — gases cross by simple diffusion.',
+  },
 }

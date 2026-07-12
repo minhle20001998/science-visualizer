@@ -6,6 +6,7 @@ import { MoleculeViewerPage } from './pages/MoleculeViewerPage'
 import { MoleculeBuilderPage } from './pages/MoleculeBuilderPage'
 import { SimulationListPage } from './pages/SimulationListPage'
 import { SimulationPlayerPage } from './pages/SimulationPlayerPage'
+import { OxygenInBloodPage } from './pages/OxygenInBloodPage'
 import { ElectronicsPage } from './pages/ElectronicsPage'
 import { NmosPage } from './pages/NmosPage'
 
@@ -19,6 +20,7 @@ function App() {
       <Route path="/builder" element={<MoleculeBuilderPage />} />
       <Route path="/biology" element={<SimulationListPage />} />
       <Route path="/biology/rna" element={<SimulationPlayerPage />} />
+      <Route path="/biology/oxygen" element={<OxygenInBloodPage />} />
       <Route path="/electronics" element={<ElectronicsPage />} />
       <Route path="/electronics/nmos" element={<NmosPage />} />
     </Routes>

@@ -48,6 +48,7 @@ export function SimulationListPage() {
             padding: '24px',
             cursor: 'pointer',
             transition: 'border-color 0.15s, background 0.15s',
+            marginBottom: '16px',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
@@ -64,6 +65,39 @@ export function SimulationListPage() {
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-dim)', lineHeight: 1.5 }}>
             Explore the primordial soup, phosphodiester bonds, and RNA folding in 3D.
+          </p>
+        </div>
+
+        <div
+          onClick={() => navigate('/biology/oxygen')}
+          style={{
+            background: 'var(--card-bg)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            padding: '24px',
+            cursor: 'pointer',
+            transition: 'border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+            e.currentTarget.style.background = 'rgba(24, 26, 38, 0.92)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+            e.currentTarget.style.background = 'var(--card-bg)'
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            marginBottom: '12px',
+          }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#eeeeee', marginBottom: '6px' }}>
+            Oxygen in Blood
+          </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-dim)', lineHeight: 1.5 }}>
+            Follow oxygen from the air you breathe into the lungs, through the bloodstream, and into cells.
           </p>
         </div>
       </div>
