@@ -12,7 +12,6 @@ const CELL_X = 3.2
 const WALL_X = 0
 const MEMBRANE_X = 2.2
 const O2_COUNT = 4
-const CO2_COUNT = 3
 const HB_COUNT = 5
 
 const MITO_POSITIONS: [number, number, number][] = [
@@ -66,7 +65,7 @@ function Mito({ pos, label }: { pos: [number, number, number]; label: string }) 
         <sphereGeometry args={[0.2, 12, 12]} />
         <meshStandardMaterial color="#dd8844" roughness={0.5} />
       </mesh>
-      <Text position={[0, -0.3, 0]} fontSize={0.09} color="#dd8844" anchorX="center" anchorY="middle" opacity={0.5}>
+      <Text position={[0, -0.3, 0]} fontSize={0.09} color="rgba(221,136,68,0.5)" anchorX="center" anchorY="middle">
         {label}
       </Text>
     </group>
@@ -80,7 +79,7 @@ function CellNucleus() {
         <sphereGeometry args={[0.25, 16, 16]} />
         <meshStandardMaterial color="#aa88cc" roughness={0.4} />
       </mesh>
-      <Text position={[0, -0.37, 0]} fontSize={0.1} color="#aa88cc" anchorX="center" anchorY="middle" opacity={0.5}>
+      <Text position={[0, -0.37, 0]} fontSize={0.1} color="rgba(170,136,204,0.5)" anchorX="center" anchorY="middle">
         Nucleus
       </Text>
     </group>
@@ -103,11 +102,9 @@ function OxygenParticles({ phase, progress, hbPositions, hbRefs, boundFlags }: {
   }, [])
 
   const refs = useRef<(THREE.Group | null)[]>([])
-  const capturedPos = useRef<THREE.Vector3[]>([])
 
-  useFrame((state) => {
+  useFrame(() => {
     const p = progress.current
-    const t = state.clock.elapsedTime
 
     o2Data.forEach((o2, i) => {
       const m = refs.current[i]
@@ -191,7 +188,7 @@ function OxygenParticles({ phase, progress, hbPositions, hbRefs, boundFlags }: {
             <sphereGeometry args={[0.04, 10, 10]} />
             <meshBasicMaterial color="#00d4ff" transparent opacity={0.8} depthWrite={false} />
           </mesh>
-          <Text position={[0, 0.07, 0]} fontSize={0.06} color="#66eeff" anchorX="center" anchorY="bottom" opacity={0.6}>
+          <Text position={[0, 0.07, 0]} fontSize={0.06} color="rgba(102,238,255,0.6)" anchorX="center" anchorY="bottom">
             O2
           </Text>
         </group>
@@ -324,7 +321,7 @@ function CO2Particles({ phase, progress, hbPositions, hbRefs, co2BoundFlags }: {
             <sphereGeometry args={[0.06, 8, 8]} />
             <meshBasicMaterial color="#ff6666" transparent opacity={0.7} depthWrite={false} />
           </mesh>
-          <Text position={[0, 0.1, 0]} fontSize={0.06} color="#ff8888" anchorX="center" anchorY="bottom" opacity={0.6}>
+          <Text position={[0, 0.1, 0]} fontSize={0.06} color="rgba(255,136,136,0.6)" anchorX="center" anchorY="bottom">
             CO2
           </Text>
         </group>

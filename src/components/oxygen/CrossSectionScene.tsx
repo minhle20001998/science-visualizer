@@ -166,7 +166,7 @@ function OxygenParticles({ phase, progress, hbPositions, hemeRefs, boundFlags }:
             <sphereGeometry args={[0.04, 10, 10]} />
             <meshBasicMaterial color="#00d4ff" transparent opacity={0.8} depthWrite={false} />
           </mesh>
-          <Text position={[0, 0.07, 0]} fontSize={0.06} color="#66eeff" anchorX="center" anchorY="bottom" opacity={0.6}>
+          <Text position={[0, 0.07, 0]} fontSize={0.06} color="rgba(102,238,255,0.6)" anchorX="center" anchorY="bottom">
             O2
           </Text>
         </group>
@@ -252,7 +252,7 @@ function CO2Particles({ phase, progress }: {
             <sphereGeometry args={[0.06, 8, 8]} />
             <meshBasicMaterial color="#ff6666" transparent opacity={0.7} depthWrite={false} />
           </mesh>
-          <Text position={[0, 0.1, 0]} fontSize={0.06} color="#ff8888" anchorX="center" anchorY="bottom" opacity={0.6}>
+          <Text position={[0, 0.1, 0]} fontSize={0.06} color="rgba(255,136,136,0.6)" anchorX="center" anchorY="bottom">
             CO2
           </Text>
         </group>
