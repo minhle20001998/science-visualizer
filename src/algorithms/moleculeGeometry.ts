@@ -8,6 +8,7 @@ export type GeometryType =
   | 'trigonal-bipyramidal'
   | 'octahedral'
   | 'chain'
+  | 'explicit'
 
 export interface MolAtom {
   element: string
@@ -603,11 +604,14 @@ export function buildMolecule3D(
   geometry: GeometryType,
   elements: { element: string; label: string; parentIndex?: number }[],
   bonds: { from: number; to: number; type: 1 | 2 | 3 }[],
-  bondLength?: number
+  bondLength?: number,
+  explicitPositions?: [number, number, number][]
 ): Molecule3D {
   const bl = bondLength ?? BOND_LENGTH
 
-  const positions = geometry === 'chain'
+  const positions = geometry === 'explicit' && explicitPositions
+    ? explicitPositions.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
+    : geometry === 'chain'
     ? generateChainPositions(elements, bonds, bl)
     : isMultiCenter(bonds)
     ? generatePositionsFromGraph(elements, bonds, bl)
@@ -621,7 +625,7 @@ export function buildMolecule3D(
   }))
 
   let centeringAtoms = atoms
-  if (geometry !== 'chain') {
+  if (geometry !== 'chain' && geometry !== 'explicit') {
     for (let i = 0; i < atoms.length; i++) {
       const parent = elements[i].parentIndex
       if (parent !== undefined && atoms[parent]) {

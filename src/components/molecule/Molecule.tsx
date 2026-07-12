@@ -8,12 +8,14 @@ export function Molecule({
   elements,
   bonds,
   geometry,
+  positions,
   spaceFill,
   showElectrons,
 }: {
   elements: { element: string; label: string; parentIndex?: number }[]
   bonds: { from: number; to: number; type: 1 | 2 | 3 }[]
   geometry: GeometryType
+  positions?: [number, number, number][]
   spaceFill: boolean
   showElectrons: boolean
 }) {
@@ -25,8 +27,8 @@ export function Molecule({
           return sum + (r1 + r2)
         }, 0) / bonds.length
       : undefined
-    return buildMolecule3D(geometry, elements, bonds, bl)
-  }, [geometry, elements, bonds, spaceFill])
+    return buildMolecule3D(geometry, elements, bonds, bl, positions)
+  }, [geometry, elements, bonds, spaceFill, positions])
 
   const center = mol.center
 

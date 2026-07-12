@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
@@ -8,18 +8,16 @@ import { Molecule } from '../components/molecule/Molecule'
 import { MoleculeInfo } from '../components/molecule/MoleculeInfo'
 import { useStore } from '../store/useStore'
 
-function MoleculeScene({ molId }: { molId: string }) {
-  const mol = getMolecule(molId)
+function MoleculeScene({ mol }: { mol: import('../data/molecules').MoleculePreset }) {
   const moleculeViewMode = useStore((s) => s.moleculeViewMode)
   const showSharedElectrons = useStore((s) => s.showSharedElectrons)
 
   const mol3D = useMemo(() => {
-    if (!mol) return null
-    return buildMolecule3D(mol.geometry, mol.elements, mol.bonds)
+    return buildMolecule3D(mol.geometry, mol.elements, mol.bonds, undefined, mol.positions)
   }, [mol])
 
   const maxDist = useMemo(() => {
-    if (!mol3D || mol3D.atoms.length === 0) return 5
+    if (mol3D.atoms.length === 0) return 5
     let max = 0
     for (const a of mol3D.atoms) {
       const d = a.position.distanceTo(mol3D.center)
@@ -27,8 +25,6 @@ function MoleculeScene({ molId }: { molId: string }) {
     }
     return Math.max(max, 3)
   }, [mol3D])
-
-  if (!mol) return null
 
   return (
     <>
@@ -42,6 +38,7 @@ function MoleculeScene({ molId }: { molId: string }) {
         elements={mol.elements}
         bonds={mol.bonds}
         geometry={mol.geometry}
+        positions={mol.positions}
         spaceFill={moleculeViewMode === 'space-filling'}
         showElectrons={showSharedElectrons}
       />
@@ -63,8 +60,26 @@ export function MoleculeViewerPage() {
   const showSharedElectrons = useStore((s) => s.showSharedElectrons)
   const setMoleculeViewMode = useStore((s) => s.setMoleculeViewMode)
   const setShowSharedElectrons = useStore((s) => s.setShowSharedElectrons)
+  const [activeVariantId, setActiveVariantId] = useState<string | null>(null)
 
   const mol = id ? getMolecule(id) : undefined
+
+  useEffect(() => { setActiveVariantId(null) }, [mol?.id])
+
+  const activeMol = useMemo(() => {
+    if (!mol) return null
+    if (!activeVariantId || !mol.variants) return mol
+    const v = mol.variants.find(v => v.id === activeVariantId)
+    if (!v) return mol
+    return {
+      ...mol,
+      formula: v.formula ?? mol.formula,
+      description: v.description ?? mol.description,
+      elements: v.elements,
+      bonds: v.bonds,
+      positions: v.positions,
+    }
+  }, [mol, activeVariantId])
 
   const currentIndex = useMemo(() => {
     if (!id) return -1
@@ -86,7 +101,7 @@ export function MoleculeViewerPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [prevId, nextId, navigate])
 
-  if (!mol) {
+  if (!mol || !activeMol) {
     return (
       <div style={{
         width: '100vw', height: '100vh',
@@ -115,10 +130,10 @@ export function MoleculeViewerPage() {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', background: '#08080e' }}>
       <Canvas gl={{ antialias: true, alpha: false }} style={{ width: '100%', height: '100%' }}>
-        <MoleculeScene molId={id!} />
+        <MoleculeScene mol={activeMol!} />
       </Canvas>
 
-      <MoleculeInfo mol={mol} />
+      <MoleculeInfo mol={activeMol} />
 
       <div style={{
         position: 'fixed',
@@ -148,12 +163,50 @@ export function MoleculeViewerPage() {
         <div style={{ width: '1px', height: '20px', background: 'var(--card-border)' }} />
         <div style={{ width: '200px', textAlign: 'center' }}>
           <div style={{ fontSize: '16px', fontWeight: 600, color: '#eeeeee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {mol.formula}
+            {activeMol!.formula}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {mol.name}
+            {activeMol!.name}
           </div>
         </div>
+        {mol.variants && mol.variants.length > 0 && (
+          <>
+            <div style={{ width: '1px', height: '20px', background: 'var(--card-border)' }} />
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={() => setActiveVariantId(null)}
+                style={{
+                  background: !activeVariantId ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  border: !activeVariantId ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  color: !activeVariantId ? '#eeeeee' : 'var(--text-dim)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                Base
+              </button>
+              {mol.variants.map(v => (
+                <button
+                  key={v.id}
+                  onClick={() => setActiveVariantId(v.id)}
+                  style={{
+                    background: activeVariantId === v.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    border: activeVariantId === v.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                    borderRadius: '6px',
+                    padding: '4px 10px',
+                    color: activeVariantId === v.id ? '#eeeeee' : 'var(--text-dim)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {v.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <div style={{ width: '1px', height: '20px', background: 'var(--card-border)' }} />
         <div style={{ width: '72px', display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
           <button

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MOLECULES } from '../data/molecules'
 
-const ALL_TAGS = ['all', 'simple', 'common', 'organic', 'acid', 'hydrocarbon', 'tetrahedral', 'diatomic', 'triatomic', 'penta', 'hexa', 'alcohol', 'base', 'p-block', 'trigonal-planar', 'aromatic', 'sugar', 'ring', 'fatty-acid', 'ester']
+const ALL_TAGS = ['all', 'simple', 'common', 'organic', 'acid', 'hydrocarbon', 'tetrahedral', 'diatomic', 'triatomic', 'penta', 'hexa', 'alcohol', 'base', 'p-block', 'trigonal-planar', 'aromatic', 'sugar', 'ring', 'fatty-acid', 'ester', 'biological', 'porphyrin']
 
 const TAG_COLORS: Record<string, string> = {
   simple: '#4af0ff',
@@ -24,6 +24,8 @@ const TAG_COLORS: Record<string, string> = {
   ring: '#6bcdff',
   'fatty-acid': '#ffb347',
   ester: '#7ec8e3',
+  biological: '#e06633',
+  porphyrin: '#a66ccd',
 }
 
 export function MoleculeHomePage() {
